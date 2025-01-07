@@ -1,12 +1,19 @@
 import express from "express";
+import dotenv from "dotenv"
 import SpotifyWebApi from "spotify-web-api-node";
+
+dotenv.config();
 const router = express.Router();
 
 const spotifyApi = new SpotifyWebApi({
-  clientID: process.env.CLIENT_ID,
-  clientSecret: process.env.CLIENT_SECRET,
-  redirectUrl: process.env.REDIRECT_URL,
+  clientId: process.env.CLIENT_ID,        // clientId (not clientID)
+  clientSecret: process.env.CLIENT_SECRET, // clientSecret (not clientSecret)
+  redirectUri: process.env.REDIRECT_URI,  // redirectUri (not redirectUri)
 });
+
+console.log("CLIENT_ID:", process.env.CLIENT_ID);
+console.log("CLIENT_SECRET:", process.env.CLIENT_SECRET);
+console.log("REDIRECT_URI:", process.env.REDIRECT_URI);
 
 router.get("/login", async (req, res) => {
   try {
@@ -16,7 +23,11 @@ router.get("/login", async (req, res) => {
       'user-read-playback-state',
       'user-modify-playback-state',
     ];
-    res.redirect(spotifyApi.createAuthorizeURL(scopes));
+    const authUrl = spotifyApi.createAuthorizeURL(scopes, null, {
+      redirectUri: encodeURIComponent(process.env.REDIRECT_URL),
+    });
+
+    res.redirect(authUrl);
   } catch (error) {
     console.error("Error in login:", error);
     res.status(500).json({ success: false, message: "Server Error" });
@@ -75,7 +86,7 @@ router.get("/search", async (req, res) => {
 router.get("/play", async (req, res) => {
   try {
     const { uri } = req.query;
-    spotifyApi.play({uris:[uri]}).then(()=>{
+    spotifyApi.play({ uris: [uri] }).then(() => {
       res.send('playback started');
     })
   } catch (error) {

@@ -34,42 +34,6 @@ router.get("/login", async (req, res) => {
   }
 });
 
-// router.get("/callback", async (req, res) => {
-//   try {
-//     const error = req.query.error;
-//     const code = req.query.code;
-//     const state = req.query.state;
-
-//     if (error) {
-//       console.error('Error:', error);
-//       res.send(`Error: ${error}`);
-//       return;
-//     }
-
-//     spotifyApi.authorizationCodeGrant(code).then(data => {
-//       const accessToken = data.body['access_token'];
-//       const refreshToken = data.body['refresh_token'];
-//       const expiresIn = data.body['expires_in'];
-
-//       spotifyApi.setAccessToken(accessToken);
-//       spotifyApi.setRefreshToken(refreshToken);
-
-//       console.log(accessToken, refreshToken);
-//       res.send('Success!');
-
-//       setInterval(async () => {
-//         const data = await spotifyApi.refreshAccessToken();
-//         const accessTokenRefreshed = data.body['access_token'];
-//         spotifyApi.setAccessToken(accessTokenRefreshed);
-//       }, (expiresIn / 2) * 1000);
-//     });
-
-//   } catch (error) {
-//     console.error("Error in callback:", error);
-//     res.status(500).json({ success: false, message: "Server Error" });
-//   }
-// });
-
 
 router.get("/callback", async (req, res) => {
   try {
@@ -77,7 +41,6 @@ router.get("/callback", async (req, res) => {
     const code = req.query.code;
     const state = req.query.state;
 
-    // Log the incoming query parameters to see the response from Spotify
     console.log('Callback query parameters:', req.query);
 
     if (error) {
@@ -89,23 +52,18 @@ router.get("/callback", async (req, res) => {
       return res.status(400).send('Missing authorization code');
     }
 
-    // Get the access token and refresh token from Spotify
     const data = await spotifyApi.authorizationCodeGrant(code);
     const accessToken = data.body['access_token'];
     const refreshToken = data.body['refresh_token'];
     const expiresIn = data.body['expires_in'];
-
-    // Set the tokens in the Spotify API client
     spotifyApi.setAccessToken(accessToken);
     spotifyApi.setRefreshToken(refreshToken);
 
     console.log('Access Token:', accessToken);
     console.log('Refresh Token:', refreshToken);
 
-    // Respond with a success message
     res.send('Authorization successful! You can now use Spotify APIs.');
 
-    // Set up the token refresh interval
     setInterval(async () => {
       try {
         const refreshData = await spotifyApi.refreshAccessToken();
@@ -115,7 +73,7 @@ router.get("/callback", async (req, res) => {
       } catch (error) {
         console.error('Error refreshing access token:', error);
       }
-    }, (expiresIn / 2) * 1000); // Refresh token halfway before expiry
+    }, (expiresIn / 2) * 1000); 
 
   } catch (error) {
     console.error("Error in callback:", error);
